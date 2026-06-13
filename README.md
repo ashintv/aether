@@ -7,11 +7,11 @@ A sleek, VS Code styled local-first markdown note-taking and daily log workspace
 You can install and run AetherNote globally directly from your terminal.
 
 ### 1. Installation
-Install the application globally via npm:
+Install the application globally via Bun (recommended):
 ```bash
-npm install -g https://github.com/ashintv/aether.git
+bun install -g https://github.com/ashintv/aether.git
 ```
-*(Or if you use Bun, run `bun install -g https://github.com/ashintv/aether.git`)*
+*(Alternatively, if you use npm, run `npm install -g https://github.com/ashintv/aether.git`)*
 
 ### 2. Usage
 Run AetherNote from any terminal directory:
