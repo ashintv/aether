@@ -113,7 +113,7 @@ export function Sidebar({
 
     const logDates = Array.from(
       new Set([
-        ...dailyLogs.map((log) => log.date),
+        ...(dailyLogs || []).map((log) => log.date),
         ...dailyNotes.map((note) => note.date),
         new Date().toISOString().split("T")[0],
       ])

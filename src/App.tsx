@@ -4,16 +4,7 @@ import { Dashboard } from "./components/Dashboard";
 import { NoteEditor } from "./components/NoteEditor";
 import { DailyLog } from "./components/DailyLog";
 import { Note, DailyLogItem, DailyNote } from "./types";
-import {
-  getNotes,
-  saveNotes,
-  getDailyLogs,
-  saveDailyLogs,
-  getDailyNotes,
-  saveDailyNotes,
-  exportWorkspace,
-  importWorkspace,
-} from "./lib/storage";
+
 import { Menu, ChevronLeft, X, Sparkles, FileText, CalendarCheck } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +12,6 @@ import "./index.css";
 
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [dailyLogs, setDailyLogs] = useState<DailyLogItem[]>([]);
   const [dailyNotes, setDailyNotes] = useState<DailyNote[]>([]);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
@@ -42,12 +32,7 @@ export function App() {
         setDailyNotes(data.dailyNotes || []);
         setTheme(data.theme || "dark");
       } catch (e) {
-        console.error("Failed to fetch workspace from server, falling back to local storage", e);
-        setNotes(getNotes());
-        setDailyLogs(getDailyLogs());
-        setDailyNotes(getDailyNotes());
-        const savedTheme = localStorage.getItem("aethernote_theme") as "light" | "dark";
-        setTheme(savedTheme || "dark");
+        console.error("Failed to fetch workspace from server", e);
       }
     };
     fetchWorkspace();
@@ -60,7 +45,6 @@ export function App() {
     } else {
       document.documentElement.classList.remove("dark");
     }
-    localStorage.setItem("aethernote_theme", theme);
     fetch("/api/theme/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -191,11 +175,7 @@ export function App() {
       folder: "",
     };
 
-    setNotes((prevNotes) => {
-      const updatedNotes = [newNote, ...prevNotes];
-      saveNotes(updatedNotes);
-      return updatedNotes;
-    });
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
     saveNoteToServer(newNote);
 
     setActiveNoteId(newNote.id);
@@ -215,11 +195,7 @@ export function App() {
       folder: folderPath,
     };
 
-    setNotes((prevNotes) => {
-      const updatedNotes = [newNote, ...prevNotes];
-      saveNotes(updatedNotes);
-      return updatedNotes;
-    });
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
     saveNoteToServer(newNote);
 
     setActiveNoteId(newNote.id);
@@ -239,22 +215,14 @@ export function App() {
       ...updatedNote,
       updatedAt: Date.now(),
     };
-    setNotes((prevNotes) => {
-      const updatedNotes = prevNotes.map((n) => (n.id === updatedNote.id ? noteWithTimestamp : n));
-      saveNotes(updatedNotes);
-      return updatedNotes;
-    });
+    setNotes((prevNotes) => prevNotes.map((n) => (n.id === updatedNote.id ? noteWithTimestamp : n)));
     saveNoteToServer(noteWithTimestamp);
   };
 
   // Delete note
   const handleDeleteNote = (id: string) => {
     if (confirm("Are you sure you want to delete this note?")) {
-      setNotes((prevNotes) => {
-        const updatedNotes = prevNotes.filter((n) => n.id !== id);
-        saveNotes(updatedNotes);
-        return updatedNotes;
-      });
+      setNotes((prevNotes) => prevNotes.filter((n) => n.id !== id));
       deleteNoteFromServer(id);
 
       if (activeNoteId === id) {
@@ -264,66 +232,14 @@ export function App() {
     }
   };
 
-  // Toggle tasks check status (no-op since checklists are simplified, but kept for interface/Dashboard compatibility)
-  const handleToggleTaskStatus = (taskId: string) => {
-    setDailyLogs((prevLogs) => {
-      const updatedLogs = prevLogs.map((log) => {
-        if (log.id === taskId) {
-          return {
-            ...log,
-            status: log.status === "done" ? ("todo" as const) : ("done" as const),
-          };
-        }
-        return log;
-      });
-      saveDailyLogs(updatedLogs);
-      return updatedLogs;
-    });
-  };
-
-  // Daily log actions (no-ops)
-  const handleAddLogItem = (date: string, text: string) => {
-    const newItem: DailyLogItem = {
-      id: `log-${Date.now()}`,
-      date,
-      text,
-      status: "todo",
-      createdAt: Date.now(),
-    };
-    setDailyLogs((prevLogs) => {
-      const updatedLogs = [newItem, ...prevLogs];
-      saveDailyLogs(updatedLogs);
-      return updatedLogs;
-    });
-  };
-
-  const handleUpdateLogItem = (updatedItem: DailyLogItem) => {
-    setDailyLogs((prevLogs) => {
-      const updatedLogs = prevLogs.map((log) => (log.id === updatedItem.id ? updatedItem : log));
-      saveDailyLogs(updatedLogs);
-      return updatedLogs;
-    });
-  };
-
-  const handleDeleteLogItem = (id: string) => {
-    setDailyLogs((prevLogs) => {
-      const updatedLogs = prevLogs.filter((log) => log.id !== id);
-      saveDailyLogs(updatedLogs);
-      return updatedLogs;
-    });
-  };
-
   const handleUpdateDailyNote = (updatedNote: DailyNote) => {
     setDailyNotes((prevDailyNotes) => {
       const exists = prevDailyNotes.some((n) => n.date === updatedNote.date);
-      let updatedNotes = [];
       if (exists) {
-        updatedNotes = prevDailyNotes.map((n) => (n.date === updatedNote.date ? updatedNote : n));
+        return prevDailyNotes.map((n) => (n.date === updatedNote.date ? updatedNote : n));
       } else {
-        updatedNotes = [...prevDailyNotes, updatedNote];
+        return [...prevDailyNotes, updatedNote];
       }
-      saveDailyNotes(updatedNotes);
-      return updatedNotes;
     });
     saveDailyNoteToServer(updatedNote);
   };
@@ -409,8 +325,7 @@ export function App() {
     if (
       confirm("WARNING: This will permanently delete all your personal notes, directories, and daily logs. Are you sure you want to proceed?")
     ) {
-      localStorage.clear();
-      // Also reset on server
+      // Reset on server
       fetch("/api/workspace/reset", { method: "POST" })
         .then(() => fetch("/api/workspace"))
         .then((res) => res.json())
@@ -422,7 +337,7 @@ export function App() {
         })
         .catch((err) => {
           console.error("Failed to reset server workspace", err);
-          alert("Local database reset successfully, but failed to reset server.");
+          alert("Failed to reset server workspace.");
         });
 
       setActiveTab("dashboard");
@@ -444,7 +359,7 @@ export function App() {
       >
         <Sidebar
           notes={notes}
-          dailyLogs={dailyLogs}
+          dailyLogs={[]}
           dailyNotes={dailyNotes}
           activeTab={activeTab}
           activeNoteId={activeNoteId}
@@ -557,11 +472,10 @@ export function App() {
         </div>
 
         {/* Tab View Routing */}
-        <main className="flex-1 min-h-0 flex flex-col relative bg-background">
+        <div className="flex-1 min-h-0 flex flex-col relative bg-background">
           {activeTab === "dashboard" && (
             <Dashboard
               notes={notes}
-              dailyLogs={dailyLogs}
               dailyNotes={dailyNotes}
               onSelectTab={(tab) => {
                 setActiveTab(tab);
@@ -572,7 +486,6 @@ export function App() {
                 setActiveTab("editor");
               }}
               onAddNote={handleAddNote}
-              onToggleTaskStatus={handleToggleTaskStatus}
               onCreateFolder={handleCreateFolder}
               onExport={handleExport}
               onImport={handleImport}
@@ -581,11 +494,7 @@ export function App() {
 
           {activeTab === "dailylog" && (
             <DailyLog
-              dailyLogs={dailyLogs}
               dailyNotes={dailyNotes}
-              onAddLogItem={handleAddLogItem}
-              onUpdateLogItem={handleUpdateLogItem}
-              onDeleteLogItem={handleDeleteLogItem}
               onUpdateDailyNote={handleUpdateDailyNote}
               theme={theme}
             />
@@ -604,7 +513,7 @@ export function App() {
               theme={theme}
             />
           )}
-        </main>
+        </div>
       </div>
     </div>
   );
