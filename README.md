@@ -20,9 +20,9 @@ aethernote
 ```
 By default, the server runs on port **3323** and sets up the workspace directory under the current working directory at `./user/.aethernote` (relative to where you started the command).
 
-To override the default port, specify the `PORT` environment variable:
+To override the default port, specify the `AETHERNOTE_PORT` environment variable:
 ```bash
-PORT=8080 aethernote
+AETHERNOTE_PORT=8080 aethernote
 ```
 
 ---

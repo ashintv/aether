@@ -157,7 +157,7 @@ function sanitizeFilename(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, "_").trim();
 }
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3323;
+const PORT = process.env.AETHERNOTE_PORT ? parseInt(process.env.AETHERNOTE_PORT) : 3323;
 
 const server = serve({
   port: PORT,
