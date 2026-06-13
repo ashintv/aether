@@ -1,0 +1,126 @@
+@import "../styles/globals.css";
+
+@layer base {
+  :root {
+    @apply font-sans;
+  }
+
+  body {
+    @apply min-h-screen w-screen m-0 bg-background text-foreground overflow-x-hidden;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Custom Markdown Prose styles for the Notion-like preview */
+.prose {
+  @apply text-foreground/90 leading-7 text-[15px];
+}
+
+.prose h1 {
+  @apply text-3xl font-extrabold mt-8 mb-4 tracking-tight border-b pb-2 text-foreground font-sans;
+}
+
+.prose h2 {
+  @apply text-2xl font-bold mt-6 mb-3 tracking-tight text-foreground font-sans;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mt-5 mb-2 text-foreground font-sans;
+}
+
+.prose p {
+  @apply my-3 leading-relaxed text-foreground/85;
+}
+
+.prose ul {
+  @apply list-disc pl-6 my-3 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 my-3 space-y-1;
+}
+
+.prose li {
+  @apply text-foreground/85;
+}
+
+.prose li::marker {
+  @apply text-muted-foreground;
+}
+
+.prose a {
+  @apply text-primary font-medium underline underline-offset-4 hover:opacity-85 transition-opacity;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/40 pl-4 italic my-4 text-muted-foreground bg-muted/30 py-1 pr-2 rounded-r-md;
+}
+
+.prose code {
+  @apply bg-muted/80 dark:bg-muted/40 px-1.5 py-0.5 rounded text-sm font-mono text-rose-500 dark:text-rose-400 font-semibold;
+}
+
+.prose pre {
+  @apply bg-zinc-950 dark:bg-zinc-900/90 text-zinc-100 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm border border-zinc-800 shadow-sm relative;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-zinc-100 font-normal;
+}
+
+.prose table {
+  @apply w-full border-collapse my-6 text-sm;
+}
+
+.prose th, .prose td {
+  @apply border border-border px-4 py-2.5;
+}
+
+.prose th {
+  @apply bg-muted/80 font-semibold text-left text-foreground;
+}
+
+.prose tr:nth-child(even) {
+  @apply bg-muted/20;
+}
+
+.prose input[type="checkbox"] {
+  @apply rounded border-input text-primary focus:ring-ring mr-2 h-4 w-4 accent-primary;
+}
+
+.prose hr {
+  @apply my-6 border-border;
+}
+
+/* Glassmorphism helpers */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(30, 30, 30, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
