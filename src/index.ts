@@ -10,6 +10,7 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  watch,
 } from "fs";
 
 // Base directory path: ./user/.aethernote
@@ -22,6 +23,62 @@ const METADATA_PATH = join(BASE_DIR, "metadata.json");
 if (!existsSync(BASE_DIR)) mkdirSync(BASE_DIR, { recursive: true });
 if (!existsSync(NOTES_DIR)) mkdirSync(NOTES_DIR, { recursive: true });
 if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR, { recursive: true });
+
+// Auto-build frontend in development mode
+const isDev = process.env.AETHERNOTE_DEV === "true";
+
+async function buildFrontend() {
+  console.log("📦 Building frontend...");
+  try {
+    const tailwindPlugin = (await import("bun-plugin-tailwind")).default;
+    const { rm } = await import("node:fs/promises");
+    const projectRoot = join(import.meta.dir, "..");
+    const outdir = join(projectRoot, "dist");
+    
+    await rm(outdir, { recursive: true, force: true });
+    
+    const glob = new Bun.Glob("src/**/*.html");
+    const entrypoints = [...glob.scanSync({ cwd: projectRoot })].map(p => join(projectRoot, p));
+    
+    await Bun.build({
+      entrypoints,
+      outdir,
+      plugins: [tailwindPlugin],
+      minify: false,
+      target: "browser",
+      sourcemap: "linked",
+      define: {
+        "process.env.NODE_ENV": JSON.stringify("development"),
+      },
+    });
+    console.log("⚡️ Frontend rebuilt successfully!");
+  } catch (err) {
+    console.error("❌ Frontend build failed:", err);
+  }
+}
+
+if (isDev) {
+  console.log("🛠️ Starting development auto-builder...");
+  await buildFrontend();
+  
+  let buildTimeout: any = null;
+  watch(join(import.meta.dir), { recursive: true }, (event, filename) => {
+    if (
+      filename &&
+      !filename.includes("index.ts") &&
+      !filename.endsWith(".tmp") &&
+      !filename.startsWith(".") &&
+      !filename.includes("dist") &&
+      !filename.includes("user")
+    ) {
+      if (buildTimeout) clearTimeout(buildTimeout);
+      buildTimeout = setTimeout(async () => {
+        console.log(`🔄 Rebuilding frontend due to change in: ${filename}`);
+        await buildFrontend();
+      }, 100);
+    }
+  });
+}
 
 // Read metadata JSON file
 function readMetadata() {
@@ -351,10 +408,10 @@ const server = serve({
         return new Response(Bun.file(distFilePath));
       }
       
-      const isProduction = process.env.NODE_ENV === "production";
-      const indexPath = isProduction 
-        ? join(import.meta.dir, "..", "dist", "index.html")
-        : join(import.meta.dir, "index.html");
+      const projectRoot = join(import.meta.dir, "..");
+      const distIndexPath = join(projectRoot, "dist", "index.html");
+      const srcIndexPath = join(import.meta.dir, "index.html");
+      const indexPath = existsSync(distIndexPath) ? distIndexPath : srcIndexPath;
         
       if (existsSync(indexPath)) {
         return new Response(Bun.file(indexPath));
